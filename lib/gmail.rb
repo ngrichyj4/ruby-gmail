@@ -8,17 +8,19 @@ class Gmail
   ##################################
   #  Gmail.new(username, password)
   ##################################
-  def initialize(username, password)
+  def initialize(username, password, imap_server='imap.gmail.com', smtp_server='smtp.gmail.com')
     # This is to hide the username and password, not like it REALLY needs hiding, but ... you know.
     # Could be helpful when demoing the gem in irb, these bits won't show up that way.
     class << self
       class << self
-        attr_accessor :username, :password
+        attr_accessor :username, :password, :imap_server, :smtp_server
       end
     end
     meta.username = username =~ /@/ ? username : username + '@gmail.com'
+    meta.imap_server = imap_server
+    meta.smtp_server = smtp_server
     meta.password = password
-    @imap = Net::IMAP.new('imap.gmail.com',993,true,nil,false)
+    @imap = Net::IMAP.new(meta.imap_server,993,true,nil,false)
     if block_given?
       login # This is here intentionally. Normally, we get auto logged-in when first needed.
       yield self
@@ -182,7 +184,7 @@ class Gmail
       meta.username.split('@')[0]
     end
     def smtp_settings
-      [:smtp, {:address => "smtp.gmail.com",
+      [:smtp, {:address => meta.smtp_server,
       :port => 587,
       :domain => domain,
       :user_name => meta.username,
